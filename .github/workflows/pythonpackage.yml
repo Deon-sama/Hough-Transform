@@ -5,7 +5,7 @@ import seaborn as sns
 
 video = cv2.VideoCapture('imm_2019_09_16_13_51_54_540.avi')
 
-while True;
+while True:
     ret, frame = video.read()
     if not ret:
         video = cv2.VideoCapture('imm_2019_09_16_13_51_54_540.avi')
