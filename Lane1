@@ -1,0 +1,50 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+video = cv2.VideoCapture('imm_2019_09_16_13_51_54_540.avi')
+
+while True:
+    ret, frame = video.read()
+    if not ret:
+        video = cv2.VideoCapture('imm_2019_09_16_13_51_54_540.avi')
+        continue
+
+    print(frame.shape)
+
+    cv2.circle(frame, (580, 450), 3, (0, 0, 255), -1) #1       cv2.circle(frame, (wp, hp), c-size, (0, 0, 255), -1)
+    cv2.circle(frame, (60, 450), 3, (0, 0, 255), -1) #2
+    cv2.circle(frame, (470, 270), 3, (0, 0, 255), -1) #3
+    cv2.circle(frame, (180, 270), 3, (0, 0, 255), -1) #4
+
+    pts1 = np.float32([[180, 270], [470, 270], [60, 450], [580, 450]])    #4-3-2-1 zomm out/in and flip
+    pts2 = np.float32([[0, 0], [480, 0], [0, 640], [480, 640]])
+    matrix = cv2.getPerspectiveTransform(pts1, pts2)
+
+    result = cv2.warpPerspective(frame, matrix, (480, 640))
+
+    focus = cv2.GaussianBlur(result, (5, 5), 0)    #houghlane
+    hsv = cv2.cvtColor(focus, cv2.COLOR_BGR2HSV)
+    low_white = np.array([18, 100, 100])
+    up_yellow = np.array([100, 120, 170])
+    mask = cv2.inRange(hsv, low_white, up_yellow)
+    edges = cv2.Canny(hsv, 100, 150)    #edges = cv2.Canny(mask, 75, 150)
+
+    lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 50, maxLineGap=50)
+    if lines is not None:
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            cv2.line(focus, (x1, y1), (x2, y2), (0, 255, 0), 5)
+
+    cv2.imshow("frame", frame)
+    cv2.imshow('Perspective Transformation', result)
+    cv2.imshow('edges', edges)
+    cv2.imshow('focus', focus)
+
+    key = cv2.waitKey(1)
+    if key == 27:
+        break
+
+cap.release()
+cv2.destroyAllWindows()
